@@ -1,10 +1,8 @@
-import { login, logout, getInfo } from '@/api/user'
-import { getToken, setToken, removeToken } from '@/utils/auth'
-import { resetRouter } from '@/router'
+import { login} from '@/api/user'
 
 const getDefaultState = () => {
   return {
-    token: getToken(),
+    token: window.sessionStorage.getItem('token'),
     name: '',
     avatar: ''
   }
@@ -33,44 +31,13 @@ const actions = {
     const { username, password } = userInfo
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), password: password }).then(response => {
-        const { data } = response
+        const { data , meta } = response
         commit('SET_TOKEN', data.token)
-        setToken(data.token)
-        resolve()
-      }).catch(error => {
-        reject(error)
-      })
-    })
-  },
-
-  // get user info
-  getInfo({ commit, state }) {
-    return new Promise((resolve, reject) => {
-      getInfo(state.token).then(response => {
-        const { data } = response
-
-        if (!data) {
-          return reject('Verification failed, please Login again.')
-        }
-
-        const { name, avatar } = data
-
-        commit('SET_NAME', name)
-        commit('SET_AVATAR', avatar)
-        resolve(data)
-      }).catch(error => {
-        reject(error)
-      })
-    })
-  },
-
-  // user logout
-  logout({ commit, state }) {
-    return new Promise((resolve, reject) => {
-      logout(state.token).then(() => {
-        removeToken() // must remove  token  first
-        resetRouter()
-        commit('RESET_STATE')
+        commit('SET_NAME', data.username)
+        commit('SET_AVATAR', data.id)
+        window.sessionStorage.setItem("token",data.token);
+        window.sessionStorage.setItem("username",data.username);
+        window.sessionStorage.setItem("id",data.id);
         resolve()
       }).catch(error => {
         reject(error)
@@ -81,7 +48,7 @@ const actions = {
   // remove token
   resetToken({ commit }) {
     return new Promise(resolve => {
-      removeToken() // must remove  token  first
+      window.sessionStorage.clear(); // must remove  token  first
       commit('RESET_STATE')
       resolve()
     })
